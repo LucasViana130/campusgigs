@@ -31,3 +31,12 @@ jwt:
   # abaixo e apenas um default de DESENVOLVIMENTO (nunca usar em producao).
   secret: ${JWT_SECRET:dev-only-insecure-secret-change-me-please-32chars}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+cep:
+  # Decisao de implementacao: nenhuma API de CEP foi definida previamente no
+  # projeto, entao foi usado o ViaCEP (publico e gratuito) como implementacao
+  # de referencia, consumido via cliente declarativo Spring HttpExchange.
+  api:
+    base-url: ${CEP_API_BASE_URL:https://viacep.com.br}
+  connect-timeout-ms: ${CEP_CONNECT_TIMEOUT_MS:3000}
+  read-timeout-ms: ${CEP_READ_TIMEOUT_MS:3000}

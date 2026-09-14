@@ -1,5 +1,7 @@
 package com.campusgigs.api.service;
 
+import com.campusgigs.api.client.CepLookupResult;
+import com.campusgigs.api.client.CepLookupService;
 import com.campusgigs.api.domain.Role;
 import com.campusgigs.api.domain.User;
 import com.campusgigs.api.dto.AuthResponse;
@@ -24,6 +26,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final CepLookupService cepLookupService;
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
@@ -31,16 +34,20 @@ public class AuthService {
             throw new EmailAlreadyInUseException(request.email());
         }
 
+        // CEP e resolvido em cidade/UF via cliente HttpExchange ANTES de
+        // persistir o usuario: um CEP invalido/inexistente interrompe o
+        // cadastro com um erro claro, em vez de deixar city/state incompletos.
+        CepLookupResult location = cepLookupService.lookup(request.cep());
+
         User user = User.builder()
                 .name(request.name())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .cep(request.cep())
+                .city(location.city())
+                .state(location.state())
                 .role(Role.USER)
                 .build();
-
-        // A resolucao de cidade/UF a partir do CEP (via HttpExchange) e
-        // adicionada no Checkpoint 5, junto com a integracao externa.
 
         User saved = userRepository.save(user);
         return UserResponse.from(saved);

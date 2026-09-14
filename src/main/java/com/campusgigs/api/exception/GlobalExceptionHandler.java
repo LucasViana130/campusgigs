@@ -80,6 +80,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    // ---- 400: CEP com formato valido mas inexistente ----
+    @ExceptionHandler(CepNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCepNotFound(CepNotFoundException ex,
+                                                               HttpServletRequest request) {
+        ApiErrorResponse body = ApiErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(), "CEP invalido", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    // ---- 502: servico externo de CEP indisponivel/timeout ----
+    @ExceptionHandler(CepServiceUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleCepServiceUnavailable(CepServiceUnavailableException ex,
+                                                                         HttpServletRequest request) {
+        ApiErrorResponse body = ApiErrorResponse.of(
+                HttpStatus.BAD_GATEWAY.value(), "Servico externo indisponivel", ex.getMessage(),
+                request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);
+    }
+
     // ---- 404: recurso inexistente ----
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException ex,
