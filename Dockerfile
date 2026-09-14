@@ -4,10 +4,10 @@ WORKDIR /build
 
 # Copia primeiro o pom.xml para aproveitar cache de dependencias
 COPY pom.xml .
-RUN mvn -B -q dependency:go-offline
+RUN mvn -B dependency:go-offline
 
 COPY src ./src
-RUN mvn -B -q clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
 # ---- Etapa 2: runtime ----
 FROM eclipse-temurin:21-jre-alpine
