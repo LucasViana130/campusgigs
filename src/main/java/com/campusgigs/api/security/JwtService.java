@@ -16,10 +16,16 @@ import java.util.Date;
  * Responsavel por emitir e validar os tokens JWT usados como mecanismo de
  * autenticacao stateless da API.
  *
- * Decisao de implementacao: o token carrega apenas o e-mail do usuario (subject)
- * e o papel (claim "role"), usados para popular o SecurityContext sem precisar
- * consultar o banco a cada requisicao para saber a role. Nenhum dado sensivel
- * (senha/hash) e incluido no token.
+ * Decisao de implementacao: o token carrega apenas o e-mail do usuario
+ * (subject), alem de emissao/expiracao. Nenhum dado sensivel (senha/hash) e
+ * incluido no token.
+ *
+ * IMPORTANTE sobre autorizacao: a role usada para autorizar cada requisicao
+ * NAO vem de dentro do token. O JwtAuthenticationFilter extrai o e-mail do
+ * token e usa o UserDetailsService para carregar o usuario (e a role atual
+ * dele) do banco a cada requisicao - ver JwtAuthenticationFilter. Isso e
+ * proposital: se a role de alguem mudar, o efeito e imediato, sem precisar
+ * esperar o token expirar ou reemitir um novo.
  */
 @Service
 public class JwtService {
@@ -37,14 +43,8 @@ public class JwtService {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
-        String role = userDetails.getAuthorities().stream()
-                .findFirst()
-                .map(Object::toString)
-                .orElse("ROLE_USER");
-
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
