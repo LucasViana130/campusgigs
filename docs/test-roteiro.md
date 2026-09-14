@@ -4,11 +4,16 @@
 > para cobrir exatamente os 15 cenarios exigidos no enunciado, mas **nao
 > foram executados neste ambiente** (o sandbox usado para gerar o codigo nao
 > tem acesso ao Maven Central nem ao Docker, entao a aplicacao nunca chegou a
-> rodar aqui - veja o aviso na mensagem de entrega). Ou seja: nenhum destes
-> testes deve ser considerado "passou" ate que VOCE rode a aplicacao
-> localmente (`docker compose up --build`) e execute os comandos abaixo,
-> registrando o status HTTP e a resposta de cada um como evidencia para o
-> professor.
+> rodar aqui). Ou seja: nenhum destes testes deve ser considerado "passou"
+> ate que VOCE rode a aplicacao localmente (`docker compose up --build`) e
+> execute os comandos abaixo, registrando o status HTTP e a resposta de cada
+> um como evidencia para o professor.
+>
+> A ordem abaixo foi revisada para ser executavel **sequencialmente, de cima
+> para baixo, sem nenhum passo depender de uma acao que só acontece depois**
+> (ela nao segue mais a mesma ordem/numeracao da lista de 15 itens do
+> enunciado - cada passo abaixo indica, entre colchetes, a qual item da
+> lista original ele corresponde).
 
 Pre-requisito: aplicacao rodando em `http://localhost:8080` (via
 `docker compose up --build`).
@@ -17,7 +22,7 @@ Pre-requisito: aplicacao rodando em `http://localhost:8080` (via
 BASE=http://localhost:8080
 ```
 
-## 1. Cadastro de USER (com CEP valido)
+## 1. Cadastro de USER com CEP valido [item 1 e 14]
 
 ```bash
 curl -i -X POST $BASE/api/auth/register \
@@ -26,7 +31,7 @@ curl -i -X POST $BASE/api/auth/register \
 ```
 Esperado: `201 Created`, corpo com `city`/`state` preenchidos automaticamente.
 
-## 2. Cadastro de um segundo USER (para testar contratacao)
+## 2. Cadastro de um segundo USER (para testar contratacao) [apoio do item 1]
 
 ```bash
 curl -i -X POST $BASE/api/auth/register \
@@ -34,28 +39,37 @@ curl -i -X POST $BASE/api/auth/register \
   -d '{"name":"Bruno Melo","email":"bruno@ufu.br","password":"senha123","cep":"01310930"}'
 ```
 
-## 3. Autenticacao e recebimento do JWT
+## 3. Autenticacao e recebimento do JWT - Ana [item 2 e 3]
 
 ```bash
 curl -i -X POST $BASE/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"ana@ufu.br","password":"senha123"}'
 ```
-Esperado: `200 OK`, corpo com `token`. Guarde os tokens de Ana e Bruno:
-
+Esperado: `200 OK`, corpo com `token`.
 ```bash
 TOKEN_ANA="<token retornado para ana@ufu.br>"
+```
+
+## 4. Autenticacao e recebimento do JWT - Bruno [apoio do item 2 e 3]
+
+```bash
+curl -i -X POST $BASE/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"bruno@ufu.br","password":"senha123"}'
+```
+```bash
 TOKEN_BRUNO="<token retornado para bruno@ufu.br>"
 ```
 
-## 4. Chamada autenticada (endpoint protegido)
+## 5. Chamada autenticada (endpoint protegido) [item 4]
 
 ```bash
 curl -i $BASE/api/users/me -H "Authorization: Bearer $TOKEN_ANA"
 ```
 Esperado: `200 OK` com os dados de Ana.
 
-## 5. Publicacao de servico (por Ana)
+## 6. Publicacao de servico por Ana [item 5]
 
 ```bash
 curl -i -X POST $BASE/api/gigs \
@@ -63,16 +77,20 @@ curl -i -X POST $BASE/api/gigs \
   -H "Content-Type: application/json" \
   -d '{"title":"Aulas de Calculo 1","description":"Reforco para a prova final","category":"Aulas","price":50.00}'
 ```
-Esperado: `201 Created`. Anote o `id` retornado como `GIG_ID`.
+Esperado: `201 Created`. Anote o `id` retornado:
+```bash
+GIG_ID="<id retornado>"
+```
 
-## 6. Listagem de servicos
+## 7. Listagem de servicos [item 6]
 
 ```bash
 curl -i "$BASE/api/gigs?status=ATIVO"
 ```
-Esperado: `200 OK`, sem necessidade de token (endpoint publico).
+Esperado: `200 OK`, sem necessidade de token (endpoint publico). O servico
+publicado no passo 6 deve aparecer na lista.
 
-## 7. Contratacao por outro usuario (Bruno contrata o servico da Ana)
+## 8. Contratacao por outro usuario - Bruno contrata o servico da Ana [item 7]
 
 ```bash
 curl -i -X POST $BASE/api/hirings \
@@ -82,7 +100,7 @@ curl -i -X POST $BASE/api/hirings \
 ```
 Esperado: `201 Created`.
 
-## 8. Tentativa de contratar o proprio servico -> erro
+## 9. Tentativa de Ana contratar o proprio servico -> erro [item 8]
 
 ```bash
 curl -i -X POST $BASE/api/hirings \
@@ -92,18 +110,10 @@ curl -i -X POST $BASE/api/hirings \
 ```
 Esperado: `400 Bad Request` ("Voce nao pode contratar o proprio servico").
 
-## 9. Tentativa de contratar servico nao ativo -> erro
+## 10. USER tentando encerrar servico de outro USER -> acesso negado (OBRIGATORIO) [item 10]
 
-```bash
-# Primeiro encerre o servico (ver item 10), depois tente contratar:
-curl -i -X POST $BASE/api/hirings \
-  -H "Authorization: Bearer $TOKEN_BRUNO" \
-  -H "Content-Type: application/json" \
-  -d "{\"gigId\": $GIG_ID}"
-```
-Esperado: `400 Bad Request` (servico nao esta ativo).
-
-## 10. USER tentando encerrar servico de outro USER -> acesso negado (OBRIGATORIO)
+O servico da Ana ainda esta `ATIVO` neste ponto (ninguem o encerrou ainda),
+entao este teste e valido exatamente aqui:
 
 ```bash
 curl -i -X PATCH $BASE/api/gigs/$GIG_ID/close \
@@ -111,41 +121,65 @@ curl -i -X PATCH $BASE/api/gigs/$GIG_ID/close \
 ```
 Esperado: `403 Forbidden` (Bruno nao e o dono do servico de Ana).
 
-## 11. ADMIN encerrando servico de qualquer usuario -> permitido
+## 11. Promover Bruno a ADMIN e obter um token com a nova role [apoio do item 11]
+
+Nao ha endpoint para isso (fora do escopo do enunciado); promova direto no banco:
 
 ```bash
-# Promova um usuario a ADMIN diretamente no banco (nao ha endpoint para isso):
-#   docker compose exec db psql -U campusgigs -d campusgigs \
-#     -c "UPDATE users SET role='ADMIN' WHERE email='bruno@ufu.br';"
-# Depois faca login novamente com bruno@ufu.br para obter um token com a nova role:
+docker compose exec db psql -U campusgigs -d campusgigs \
+  -c "UPDATE users SET role='ADMIN' WHERE email='bruno@ufu.br';"
+```
+
+Como a role e resolvida a partir do banco a cada requisicao (nao a partir
+do JWT), nem seria necessario gerar um token novo para a mudanca ter
+efeito - mas como o login tambem serve de evidencia de que o novo papel
+foi aplicado, refaca o login mesmo assim:
+
+```bash
 curl -i -X POST $BASE/api/auth/login -H "Content-Type: application/json" \
   -d '{"email":"bruno@ufu.br","password":"senha123"}'
-TOKEN_ADMIN="<novo token de bruno, agora ADMIN>"
+```
+```bash
+TOKEN_ADMIN="<token de bruno, agora ADMIN>"
+```
 
+## 12. ADMIN encerrando servico de qualquer usuario -> permitido [item 11]
+
+```bash
 curl -i -X PATCH $BASE/api/gigs/$GIG_ID/close -H "Authorization: Bearer $TOKEN_ADMIN"
 ```
-Esperado: `200 OK` (dono OU admin pode encerrar; aqui testamos o caso ADMIN
+Esperado: `200 OK`, `status` do servico agora `ENCERRADO` (Bruno/ADMIN
 encerrando um servico que nao e dele).
 
-## 12. Acesso a endpoint protegido sem token -> rejeitado
+## 13. Tentativa de contratar servico nao ativo -> erro [item 9]
+
+Agora que o servico foi encerrado no passo 12, este teste finalmente tem
+como ser executado de verdade (na ordem original do enunciado ele vinha
+antes de o servico ser encerrado, o que o tornava impossivel de rodar):
+
+```bash
+curl -i -X POST $BASE/api/hirings \
+  -H "Authorization: Bearer $TOKEN_BRUNO" \
+  -H "Content-Type: application/json" \
+  -d "{\"gigId\": $GIG_ID}"
+```
+Esperado: `400 Bad Request` (situacao atual: `ENCERRADO`).
+
+## 14. Acesso a endpoint protegido sem token -> rejeitado [item 12]
 
 ```bash
 curl -i $BASE/api/users/me
 ```
 Esperado: `401 Unauthorized`.
 
-## 13. Token invalido -> rejeitado
+## 15. Token invalido -> rejeitado [item 13]
 
 ```bash
 curl -i $BASE/api/users/me -H "Authorization: Bearer token-invalido-qualquer"
 ```
 Esperado: `401 Unauthorized`.
 
-## 14. Cadastro com CEP valido -> cidade e UF preenchidos
-
-Ja coberto no item 1 (verifique `city`/`state` na resposta).
-
-## 15. CEP inexistente -> erro claro
+## 16. CEP inexistente -> erro claro [item 15]
 
 ```bash
 curl -i -X POST $BASE/api/auth/register \
