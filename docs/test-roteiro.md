@@ -191,6 +191,21 @@ deve ser criado.
 
 ---
 
-Para registrar a evidencia, cole o comando + status HTTP + corpo da resposta
-de cada item (pode ser um arquivo `.md`, print do Postman/Insomnia, ou saida
-de terminal) e anexe/junte ao commit do CP5.
+## Como registrar a evidencia
+
+O CP5 ja faz parte do historico e nao deve ser reescrito de novo so para
+anexar evidencia de teste. Depois de executar os 16 passos acima:
+
+1. Cole o comando + status HTTP + corpo da resposta de cada item em um
+   arquivo (pode ser um `.md`, prints do Postman/Insomnia, ou saida de
+   terminal salva em texto).
+2. Salve esse material em `docs/evidencias/` (crie a pasta se nao existir).
+3. Crie um commit NOVO, depois dos testes, por exemplo:
+
+```bash
+git add docs/evidencias/
+git commit -m "docs: adiciona evidencias dos testes manuais"
+```
+
+Nao invente evidencia agora: a pasta `docs/evidencias/` so deve ganhar
+conteudo depois que voce realmente rodar os testes na sua maquina.
