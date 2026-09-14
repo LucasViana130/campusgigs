@@ -33,7 +33,7 @@ services:
       DB_USER: ${DB_USER:-campusgigs}
       DB_PASSWORD: ${DB_PASSWORD:-campusgigs}
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_SECRET: ${JWT_SECRET:-troque-esta-chave-por-uma-secreta-com-pelo-menos-32-caracteres}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
       CEP_API_BASE_URL: ${CEP_API_BASE_URL:-https://viacep.com.br}
     ports:

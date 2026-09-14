@@ -1,5 +1,6 @@
 package com.campusgigs.api.controller;
 
+import com.campusgigs.api.dto.AuthResponse;
 import com.campusgigs.api.dto.LoginRequest;
 import com.campusgigs.api.dto.RegisterRequest;
 import com.campusgigs.api.dto.UserResponse;
@@ -24,9 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
-        // A partir do Checkpoint 3 este endpoint passa a retornar tambem o
-        // token JWT; por enquanto apenas confirma que as credenciais sao validas.
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 }

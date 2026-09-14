@@ -2,11 +2,13 @@ package com.campusgigs.api.service;
 
 import com.campusgigs.api.domain.Role;
 import com.campusgigs.api.domain.User;
+import com.campusgigs.api.dto.AuthResponse;
 import com.campusgigs.api.dto.LoginRequest;
 import com.campusgigs.api.dto.RegisterRequest;
 import com.campusgigs.api.dto.UserResponse;
 import com.campusgigs.api.exception.EmailAlreadyInUseException;
 import com.campusgigs.api.repository.UserRepository;
+import com.campusgigs.api.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
@@ -43,7 +46,7 @@ public class AuthService {
         return UserResponse.from(saved);
     }
 
-    public UserResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
@@ -52,6 +55,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException(
                         "Usuario autenticado nao encontrado apos autenticacao bem-sucedida"));
 
-        return UserResponse.from(user);
+        String token = jwtService.generateToken(user);
+        return AuthResponse.of(token, jwtService.getExpirationMs(), UserResponse.from(user));
     }
 }
