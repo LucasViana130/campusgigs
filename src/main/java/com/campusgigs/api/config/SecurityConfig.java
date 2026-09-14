@@ -16,14 +16,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 /**
  * Configuracao de seguranca.
  *
- * A partir deste checkpoint (CP3) a API e protegida por JWT: nao ha mais
- * sessao de servidor (STATELESS), nao ha login por formulario/basic auth, e
- * cada requisicao a um endpoint protegido precisa trazer um
- * "Authorization: Bearer <token>" valido, verificado pelo JwtAuthenticationFilter.
+ * Desde o CP3 a API e protegida por JWT: sem sessao de servidor (STATELESS),
+ * sem login por formulario/basic auth, e cada requisicao a um endpoint
+ * protegido precisa trazer um "Authorization: Bearer <token>" valido,
+ * verificado pelo JwtAuthenticationFilter.
+ *
+ * A partir do CP4, a listagem/detalhe de servicos (GET /api/gigs/**) e
+ * publica - "listar os servicos publicados" nao exige autenticacao no
+ * enunciado - enquanto publicar, editar, encerrar e contratar continuam
+ * exigindo um usuario autenticado. As regras finas por papel (dono/ADMIN)
+ * sao verificadas na camada de servico, nao aqui.
  *
  * 401 (nao autenticado) e 403 (autenticado sem permissao) sao tratados por
  * handlers dedicados para manter o mesmo formato de erro do resto da API.
@@ -66,6 +73,7 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/gigs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

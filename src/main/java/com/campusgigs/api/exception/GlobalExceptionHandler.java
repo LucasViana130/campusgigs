@@ -6,8 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -42,6 +44,49 @@ public class GlobalExceptionHandler {
                 fieldErrors
         );
         return ResponseEntity.badRequest().body(body);
+    }
+
+    // ---- 403: autenticado, porem sem permissao para a operacao ----
+    // Nota: quando AccessDeniedException e lancada de dentro de um controller/service
+    // (como as regras de propriedade em GigService), o Spring MVC resolve o
+    // @ExceptionHandler ANTES de a excecao chegar ao AccessDeniedHandler do
+    // Spring Security. Por isso ela tambem e tratada aqui, com o mesmo formato
+    // usado pelo RestAccessDeniedHandler (que continua cobrindo negacoes que
+    // ocorrem diretamente na cadeia de filtros de seguranca).
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex,
+                                                                HttpServletRequest request) {
+        ApiErrorResponse body = ApiErrorResponse.of(
+                HttpStatus.FORBIDDEN.value(), "Acesso negado", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    // ---- 400: parametro de request com tipo/valor incompativel (ex.: ?status=XYZ) ----
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                                HttpServletRequest request) {
+        String message = "Valor invalido para o parametro '" + ex.getName() + "'";
+        ApiErrorResponse body = ApiErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(), "Requisicao invalida", message, request.getRequestURI());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    // ---- 400: regra de negocio violada ----
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleBusinessRule(BusinessRuleViolationException ex,
+                                                                HttpServletRequest request) {
+        ApiErrorResponse body = ApiErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(), "Regra de negocio violada", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    // ---- 404: recurso inexistente ----
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException ex,
+                                                            HttpServletRequest request) {
+        ApiErrorResponse body = ApiErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(), "Nao encontrado", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     // ---- 409: e-mail duplicado ----
