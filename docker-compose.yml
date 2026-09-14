@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: campusgigs-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-campusgigs}
+      POSTGRES_USER: ${DB_USER:-campusgigs}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-campusgigs}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - campusgigs_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-campusgigs} -d ${DB_NAME:-campusgigs}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - campusgigs-net
+
+  app:
+    build: .
+    container_name: campusgigs-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-campusgigs}
+      DB_USER: ${DB_USER:-campusgigs}
+      DB_PASSWORD: ${DB_PASSWORD:-campusgigs}
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      CEP_API_BASE_URL: ${CEP_API_BASE_URL:-https://viacep.com.br}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - campusgigs-net
+
+networks:
+  campusgigs-net:
+    driver: bridge
+
+volumes:
+  campusgigs_pgdata:
