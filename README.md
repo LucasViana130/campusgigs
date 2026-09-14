@@ -67,9 +67,15 @@ com o Hibernate em modo `validate` (nunca gera/altera schema sozinho).
 - `V1__create_initial_schema.sql`: cria `users`, `gigs` e `hirings`, com
   chaves primarias/estrangeiras, `UNIQUE` de e-mail e `CHECK` para os enums
   de papel/situacao.
+- `V2__alter_user_state_to_varchar.sql`: corrige o tipo da coluna
+  `users.state` de `CHAR(2)` para `VARCHAR(2)` - a V1 criou a coluna como
+  `CHAR(2)`, mas o Hibernate mapeia `String` como `VARCHAR` por padrao, o
+  que quebrava `ddl-auto=validate` na inicializacao. A V1 nao foi editada
+  retroativamente; a correcao virou uma nova migration, como o proprio
+  enunciado pede para qualquer evolucao de schema.
 
 Se o schema precisar mudar no futuro, a convencao e criar uma nova migration
-(`V2__...`, `V3__...`); migrations ja aplicadas em checkpoints anteriores
+(`V3__...`, `V4__...`); migrations ja aplicadas em checkpoints anteriores
 nunca sao editadas retroativamente.
 
 ## Papeis (roles)
