@@ -124,8 +124,8 @@ Tudo abaixo reflete isso: nada que dependa de execucao esta marcado como
 **Arquivos**: `pom.xml` (dependencia JJWT), `application.yml` (jwt.secret/expiration), `JwtService.java`, `JwtAuthenticationFilter.java`, `RestAuthenticationEntryPoint.java`, `RestAccessDeniedHandler.java`, `SecurityConfig.java` (reescrito), `AuthResponse.java`, `AuthService.login()` (atualizado), `UserController.java` (`/api/users/me`).
 **Resumo**: login passa a devolver um JWT; um filtro le o header `Authorization`, valida o token e popula o `SecurityContext`; endpoint protegido para validar o fluxo.
 **Commit**: `CP3: emissao e validacao de JWT, endpoint protegido (/api/users/me)`
-**Justificativa (no corpo do commit)**: "O JWT carrega so o e-mail (subject); a autorizacao de cada requisicao vem do banco via UserDetailsService no JwtAuthenticationFilter, nao do token."
-**Nota (arquitetura real)**: o token nunca carregou uma claim de role usada para autorizar nada - a role sempre veio do banco via `UserDetailsService.loadUserByUsername`. Uma claim `"role"` chegou a existir no token entre a 1a e a 2a auditoria, mas nunca foi lida por nenhum ponto do codigo; foi removida por ser informacao morta e potencialmente enganosa (ver secao 6 da revisao anterior no historico do commit `refactor(security)`).
+**Justificativa (no corpo do commit)**: "O JWT usa o e-mail como subject e, neste checkpoint, ainda inclui a claim role - mas a autorizacao ja e resolvida pelo UserDetailsService via banco."
+**Nota (arquitetura real)**: o token nunca carregou uma claim de role usada para autorizar nada - a role sempre veio do banco via `UserDetailsService.loadUserByUsername`. A claim `"role"` existia no token neste checkpoint, mas nunca foi lida por nenhum ponto do codigo; foi removida posteriormente por ser informacao morta e potencialmente enganosa (ver commit `refactor(security)` no historico).
 
 ### CP4 - Dominio de servicos/contratacoes e autorizacao por papel
 **Arquivos**: `Gig.java`, `GigStatus.java`, `Hiring.java`, `HiringStatus.java`, `GigRepository.java`, `HiringRepository.java`, DTOs de Gig/Hiring, `ResourceNotFoundException.java`, `BusinessRuleViolationException.java`, `GigService.java`, `HiringService.java`, `GigController.java`, `HiringController.java`, `SecurityConfig.java` (GET publico), `GlobalExceptionHandler.java` (novos handlers).
@@ -181,6 +181,19 @@ Tudo abaixo reflete isso: nada que dependa de execucao esta marcado como
 5. **`docs/test-roteiro.md` nao exige mais reescrever o CP5** - a orientacao
    de "anexar a evidencia ao commit do CP5" foi trocada por: salvar em
    `docs/evidencias/` e criar um commit novo depois dos testes.
+
+## 6b. Correcoes desta rodada de auditoria (3a - so documentais/historicas)
+
+1. **Justificativa do CP3 estava incorreta para o momento historico dela** -
+   dizia que o token "carrega so o e-mail", mas o `JwtService` DENTRO
+   daquele commit ainda incluia `.claim("role", role)` (a claim so foi
+   removida no commit `refactor(security)`, posterior). Corrigida para
+   descrever o estado real do codigo naquele checkpoint: token com e-mail
+   + claim `role`, mas autorizacao ja resolvida via banco.
+2. **`docs/test-roteiro.md`** - o titulo "obter um token com a nova role" e
+   o comentario do `TOKEN_ADMIN` sugeriam que a role ficava codificada no
+   token. Corrigido para deixar claro que a autoridade ADMIN vem do banco
+   a cada requisicao, nao do conteudo do token.
 
 ## 7. Autoria dos commits - acao obrigatoria antes do push
 

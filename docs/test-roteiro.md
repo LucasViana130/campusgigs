@@ -121,7 +121,7 @@ curl -i -X PATCH $BASE/api/gigs/$GIG_ID/close \
 ```
 Esperado: `403 Forbidden` (Bruno nao e o dono do servico de Ana).
 
-## 11. Promover Bruno a ADMIN e obter um token com a nova role [apoio do item 11]
+## 11. Promover Bruno a ADMIN e refazer o login [apoio do item 11]
 
 Nao ha endpoint para isso (fora do escopo do enunciado); promova direto no banco:
 
@@ -130,17 +130,21 @@ docker compose exec db psql -U campusgigs -d campusgigs \
   -c "UPDATE users SET role='ADMIN' WHERE email='bruno@ufu.br';"
 ```
 
-Como a role e resolvida a partir do banco a cada requisicao (nao a partir
-do JWT), nem seria necessario gerar um token novo para a mudanca ter
-efeito - mas como o login tambem serve de evidencia de que o novo papel
-foi aplicado, refaca o login mesmo assim:
+A role e resolvida a partir do banco a cada requisicao (o JWT atual nao
+carrega nenhuma claim de role), entao nem seria necessario gerar um token
+novo para a mudanca ter efeito - mas como o login tambem serve de evidencia
+de que o novo papel foi aplicado, refaca o login mesmo assim:
 
 ```bash
 curl -i -X POST $BASE/api/auth/login -H "Content-Type: application/json" \
   -d '{"email":"bruno@ufu.br","password":"senha123"}'
 ```
 ```bash
-TOKEN_ADMIN="<token de bruno, agora ADMIN>"
+# TOKEN_ADMIN e apenas o token de Bruno (o mesmo tipo de token de sempre,
+# sem nenhuma informacao de papel dentro dele) - a autoridade de ADMIN vem
+# da consulta ao banco feita pelo UserDetailsService a cada requisicao,
+# nao do conteudo do token.
+TOKEN_ADMIN="<token de bruno>"
 ```
 
 ## 12. ADMIN encerrando servico de qualquer usuario -> permitido [item 11]
