@@ -217,6 +217,11 @@ evidencia e revisar antes do push), e
 16 cenarios em si, cobrindo todos os casos exigidos pelo enunciado
 (incluindo o obrigatorio de acesso negado por papel).
 
+Se preferir testar pelo Postman em vez de `curl`, importe
+[`docs/postman/CampusGigs.postman_collection.json`](docs/postman/CampusGigs.postman_collection.json) -
+ela segue a mesma ordem do roteiro e preenche sozinha as variaveis
+(tokens, id do servico) a partir das respostas.
+
 ## Decisoes de implementacao (nao especificadas explicitamente no enunciado)
 
 - **Banco de dados**: PostgreSQL (nenhum banco estava definido previamente).

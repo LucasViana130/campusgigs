@@ -120,6 +120,15 @@ Os passos usam variaveis de shell (`TOKEN_ANA`, `TOKEN_BRUNO`, `GIG_ID`,
 `TOKEN_ADMIN`) que voce mesmo preenche com o que a API devolver em cada
 etapa anterior - o roteiro indica exatamente onde pegar cada valor.
 
+**Alternativa via Postman**: se preferir nao digitar `curl`, importe
+[`docs/postman/CampusGigs.postman_collection.json`](postman/CampusGigs.postman_collection.json)
+no Postman. Ela segue a mesma ordem, e os tokens/`gigId` sao capturados
+automaticamente de uma requisicao para a outra (menos copiar/colar). Ha
+UM passo manual dentro da colecao (marcado com aviso): promover o Bruno a
+ADMIN direto no banco, ja que nao existe endpoint HTTP para isso. Para
+guardar evidencia pelo Postman, exporte os resultados da execucao (aba
+"Runner" -> "Export Results") e salve em `docs/evidencias/` no Passo 6.
+
 ---
 
 ## Passo 6 - Guardar a evidencia (em um commit novo, nao no CP5)
