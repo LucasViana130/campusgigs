@@ -210,9 +210,12 @@ curl -i -X POST http://localhost:8080/api/gigs \
 
 ## Roteiro de testes manuais
 
-Veja [`docs/test-roteiro.md`](docs/test-roteiro.md) para o roteiro completo em
-`curl`, cobrindo todos os cenarios exigidos pelo enunciado (incluindo o caso
-obrigatorio de acesso negado por papel).
+Veja [`docs/COMO-TESTAR.md`](docs/COMO-TESTAR.md) para o passo a passo
+completo (identidade Git, subir o ambiente, rodar os testes, guardar
+evidencia e revisar antes do push), e
+[`docs/test-roteiro.md`](docs/test-roteiro.md) para os comandos `curl` dos
+16 cenarios em si, cobrindo todos os casos exigidos pelo enunciado
+(incluindo o obrigatorio de acesso negado por papel).
 
 ## Decisoes de implementacao (nao especificadas explicitamente no enunciado)
 
